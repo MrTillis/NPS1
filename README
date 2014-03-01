@@ -1,1 +1,25 @@
-Serve us up some code Ronny
+Important info for the Server classes:
+--------------------------------------------------------------------------------------------------------------------------
+In SController.java, the subclass "ServerThread" is the code for a server thread to match a Client thread. It is called 
+from Runnable object called "Runnable run = new Runnable()" in enterAction() under the "EnterListener" subclass.
+
+The get methods required for the menu are located under the subclass "Server." I assume we can use these... if not, then
+we can alwayse change them.
+
+I currently have a netstat method underway in getNetstat(). If you open the server and type in --netstat or -n in the
+command line, you should see the netstat appear in the display. The trick now is to get that to occour from the client
+side, by sending a request to the server to retreive the data.
+
+The method, getTime(), is currently fully functinal and operational across both Server and client. Type --time or -t to
+use it in the command line. That's one part o fthe menu fuly functinal...
+
+The Server is designed to handle multiple Client Threads.
+
+A quick note: to get the name of the current Client thread being handled by the Server, look at the line of code:
+
+  clientcmd = in.readLine();
+  
+That is the part of the code where the Server waits for a command from the Client Thread.
+Use this code to get the name of said Client thread:
+
+  clientcmd = this.getName();

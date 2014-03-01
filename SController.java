@@ -37,7 +37,8 @@ import javax.swing.*;
 import net.miginfocom.swing.MigLayout;
 
 /**
- *
+ * The main class for the Server Controller (SController).
+ * 
  * @author Taylor (GUI layout)
  * @author Jeremiah Doody (Main coding, GUI layout)
  */
@@ -192,10 +193,10 @@ private class Server extends JPanel
 
         add(portL, "span 1, growx");
         add(port, "span 1, w 80!, growx");
-        add(login, "span 1, w 80!, wrap");
+        add(login, "span 1, w 100!, wrap");
         add(scroll, "span 4, growx, growy, push, wrap");
         add(cmdLine, "span 3, growx, growy");
-        add(enterKey, "span 1, w 80!, wrap");
+        add(enterKey, "span 1, w 100!, wrap");
 
     }//end guiFunc() method
 
@@ -625,34 +626,15 @@ private class Server extends JPanel
                         in= new BufferedReader(new InputStreamReader(connection.getInputStream()));
                         out=new PrintWriter(connection.getOutputStream());
                         out.flush();
-
-                        //Debug Info on in/out (use if needed):
-//                        System.out.print("In openServer(): ");
-//                        if (out != null) 
-//                        {
-//                            System.out.print("out is not null and ");
-//                        } 
-//                        else 
-//                        {
-//                            System.out.print("out is null and ");
-//                        }
-//                        if (in != null) 
-//                        {
-//                            System.out.println("in is not null.");
-//                        } 
-//                        else 
-//                        {
-//                            System.out.println("in is null.");
-//                        }
                         
                         //send success message to Client
                         messageOut("server", "Hello client. Connection is successful.");
                         
-//                        if (!cmd.startsWith("-")) 
-//                        {
-//                            messageOut("admin", cmd);
-//                            
-//                        }//end if
+                        if (!cmd.startsWith("-")) 
+                        {
+                            messageOut("admin", cmd);
+                            
+                        }//end if
                         
                         do 
                         {
@@ -688,7 +670,12 @@ private class Server extends JPanel
                                     
                                     append("server", "Client accessed netstat.");
                                     
+                                    messageOut("server", "Sending Netstat data "
+                                            + "to Client...");
+                                    
                                     String[] netArr = getNetstat();
+                                    
+                                    System.out.println("Test Netstat Array:");
                                     
                                     int index = 0;
                                     
@@ -696,6 +683,8 @@ private class Server extends JPanel
                                     {
                                         //send out netstat line
                                         messageOut("tab", netArr[index]);
+                                        
+                                        System.out.println(netArr[index]);
                                         
                                         //increment index #
                                         index++;
@@ -773,16 +762,16 @@ private class Server extends JPanel
              * <p><b>KEY:</b></p>
              * <p>type "server" to add Server's built in tag to message.</p>
              * <p>type "admin" to add admin's current tag to message.</p>
+             * <p>type "tab" to add a tab to outward message.</p>
              */
             public void messageOut(String tag, String message) 
             {
 
                 String sTag = "\nServer> ";
                 String aTag = "\n" + adminName + "> ";
-
-//                try 
-//                {
-
+                String tTag = "\n\t";
+                
+                
                 if (tag.equalsIgnoreCase("admin")) 
                 {
                     //append to display
@@ -828,18 +817,19 @@ private class Server extends JPanel
                     out.flush();
 
                 }//end else if
-
+                
+                else if(tag.equalsIgnoreCase("tab"))
+                {
+                    //append to display
+                    System.out.println(tTag + message);
+                    append("tab", message);
+                    //write out a message to client.
+                    out.println(message);
+                    out.flush();
+                }//end else if
+                
                 out.flush();
 
-//                }//end try
-//                catch (IOException ex) 
-//                {
-//                    System.out.println("I/O error while sending message out to "
-//                            + "client.");
-//                    append("server", "I/O error occoured while sending message to "
-//                            + "client.");
-//                    Logger.getLogger(SController.Server.class.getName()).log(Level.SEVERE, null, ex);
-//                }//end catch
 
 
             }//end messageOut() method

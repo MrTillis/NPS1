@@ -38,7 +38,8 @@ import net.miginfocom.swing.MigLayout;
 
 /**
  *
- * @author Taylor
+ * @author Taylor (GUI layout)
+ * @author Jeremiah Doody (Main coding, GUI layout)
  */
 public class SController 
 {

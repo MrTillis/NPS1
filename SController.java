@@ -34,6 +34,8 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
 import net.miginfocom.swing.MigLayout;
 
 /**
@@ -85,7 +87,7 @@ public class SController
         mainframe.getContentPane().add(serverPanel);
         mainframe.pack();
         mainframe.setVisible(true);
-    }
+    }//end SController constructor method
     
 //////////////////////////////////////////////////////////////////////////////
     
@@ -116,38 +118,38 @@ public class SController
     
 
     
-/**
- * This class defines the GUI of the Server 
- * 
- * @author Jeremiah
- * @author Taylor
- */
-private class Server extends JPanel
-{
-    
-    JLabel portL = new JLabel("Port Number:");
-    JTextField port = new JTextField(5);
-    JTextField cmdLine = new JTextField();
-    JScrollPane scroll;
-    JTextArea display = new JTextArea();//(200,400)
-    
-    JButton login = new JButton("Create");
-    JButton enterKey = new JButton(">>");
-    String adminName = "Admin";//userName
-    String portNum;
-    String cmd = ""; 
-    String clientcmd;
-    
-    //the nitty-gritty:
-    int serverInitialized;
-    String empty = "";
-//    boolean firstActivate = false;
-    
-    ServerSocket socketProvider;
-    Socket connection;
-    
-//    BufferedReader in;
-//    PrintWriter out;
+    /**
+     * This class defines the GUI of the Server 
+     * 
+     * @author Jeremiah
+     * @author Taylor
+     */
+    private class Server extends JPanel
+    {
+
+        JLabel portL = new JLabel("Port Number:");
+        JTextField port = new JTextField(5);
+        JTextField cmdLine = new JTextField();
+        JScrollPane scroll;
+        JTextArea display = new JTextArea();//(200,400)
+
+        JButton login = new JButton("Create");
+        JButton enterKey = new JButton(">>");
+        String adminName = "Admin";//userName
+        String portNum;
+        String cmd = ""; 
+        String clientcmd;
+
+        //the nitty-gritty:
+        int serverInitialized;
+        String empty = "";
+    //    boolean firstActivate = false;
+
+        ServerSocket socketProvider;
+        Socket connection;
+
+    //    BufferedReader in;
+    //    PrintWriter out;
     
     
 //////////////////////////////////////////////////////////////////////////////
@@ -175,8 +177,8 @@ private class Server extends JPanel
         port.setToolTipText("Type in the server port #");
         cmdLine.setToolTipText("Type your Command Arguments");
         enterKey.setToolTipText("Enter Command");
-//        scroll.addMouseWheelListener(new MouseWhListener());
-
+        
+        
         connection = null;
         serverInitialized = 0;
         display.append("Server> Please input a port number to create an inactive server.");
@@ -321,6 +323,48 @@ private class Server extends JPanel
         
         System.out.println("getNetstat() method accessed.");
         
+        //create String array of executed code "netstat"
+        String[] messageArr = execute("netstat");
+        
+        //return the array. Note the info will have been printed on screen.
+        return messageArr;
+        
+    }//end getNetstat()
+    
+//////////////////////////////////////////////////////////////////////////////
+    
+    /**
+     * 
+     */
+    public String[] getRunningProcesses()
+    {
+        
+        System.out.println("getRunningProcesses() method accessed.");
+        
+        //create String array of executed code "netstat"
+        String[] messageArr = execute("tasklist");
+        
+        //return the array. Note the info will have been printed on screen.
+        return messageArr;
+        
+    }//end getRunningProcesses() method
+    
+/////////////////////////////////////////////////////////////////////////////
+    
+    /**
+     * 
+     */
+    public void getCurrentUsers()
+    {
+    
+    
+    }//end getCurrentUsers()
+    
+//////////////////////////////////////////////////////////////////////////////
+    
+    private String[] execute(String cmd)
+    {
+        
         //set up String array (Highest number is 2147483647.)
         int arraySize = 20000;
         String[] messageArr =new String[arraySize];
@@ -335,7 +379,7 @@ private class Server extends JPanel
         {
             
             //initialize process netstat
-            Process process = Runtime.getRuntime().exec("netstat");
+            Process process = Runtime.getRuntime().exec(cmd);
             InputStream is = process.getInputStream();
             
             //initialzie in-coming stream's buffered reader
@@ -364,7 +408,7 @@ private class Server extends JPanel
                 else
                 {
                     append("server", "There was too much info to process. Only "
-                            + arraySize + " lines of netstat were printed.");
+                            + arraySize + " lines of" + cmd + " were printed.");
                     break;
                 }//end else
                 
@@ -396,30 +440,7 @@ private class Server extends JPanel
         //return the array. Note the info will have been printed on screen.
         return messageArr;
         
-    }//end getNetstat()
-    
-//////////////////////////////////////////////////////////////////////////////
-    
-    /**
-     * 
-     */
-    public void getRunningProcesses()
-    {
-    
-    
-    }//end getRunningProcesses() method
-    
-/////////////////////////////////////////////////////////////////////////////
-    
-    /**
-     * 
-     */
-    public void getCurrentUsers()
-    {
-    
-    
-    }//end getCurrentUsers()
-    
+    }//end execute()
     
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -505,6 +526,13 @@ private class Server extends JPanel
                 {
                     
                     getNetstat();
+                    
+                }//end else if
+                else if(cmd.equalsIgnoreCase("--processes")
+                        || cmd.equalsIgnoreCase("-p"))
+                {
+                    
+                    getRunningProcesses();
                     
                 }//end else if
                 else if (cmd.equalsIgnoreCase("--activate")) 
@@ -630,11 +658,50 @@ private class Server extends JPanel
                         //send success message to Client
                         messageOut("server", "Hello client. Connection is successful.");
                         
-                        if (!cmd.startsWith("-")) 
-                        {
-                            messageOut("admin", cmd);
-                            
-                        }//end if
+//                        Runnable adminMessage = new Runnable() 
+//                        {
+//                            @Override
+//                            public void run() 
+//                            {
+//                                
+//                                cmd = "";
+//                                
+//                                int i = 0;
+//                                
+//                                while(true)
+//                                {
+//                                    
+//                                    //If the user has entered something worth sending
+//                                    if(!cmd.equals(empty.trim()))
+//                                        i=1;
+//                                    
+//                                    while(i==1)
+//                                    {
+//                                        //send out if not a command
+//                                        if (!((cmd.toString()).startsWith("-"))) 
+//                                        {
+//                                            messageOut("admin", cmd.toString());
+//                                            System.out.println("Admin message \"cmd\": " + cmd.toString());
+//                                            i=0;
+//                                        }//end if
+//                                        else if (((cmd.toString()).startsWith("-"))) 
+//                                        {
+//                                            System.out.println("Admin message \"cmd\": " + cmd.toString());
+//                                            i=0;
+//                                        }//end if
+//                                    }//end while loop
+//                                    
+//                                     cmd = "";
+//                                    
+//                                }//end while loop
+//
+//                            }//end run() method
+//                        };
+//                        new Thread(adminMessage).start();
+                        
+                        
+                        
+                        
                         
                         do 
                         {
@@ -671,11 +738,39 @@ private class Server extends JPanel
                                     append("server", "Client accessed netstat.");
                                     
                                     messageOut("server", "Sending Netstat data "
-                                            + "to Client...");
+                                            + "to Client. Please wait...");
                                     
                                     String[] netArr = getNetstat();
                                     
                                     System.out.println("Test Netstat Array:");
+                                    
+                                    int index = 0;
+                                    
+                                    while(netArr[index] != null)
+                                    {
+                                        //send out netstat line
+                                        messageOut("tab", netArr[index]);
+                                        
+                                        System.out.println(netArr[index]);
+                                        
+                                        //increment index #
+                                        index++;
+                                    
+                                    }//end while
+                                
+                                }//end else if
+                                else if(clientcmd.equalsIgnoreCase("--processes")
+                                        ||clientcmd.equalsIgnoreCase("-p"))
+                                {
+                                    
+                                    append("server", "Client accessed running processes.");
+                                    
+                                    messageOut("server", "Sending Running Process data "
+                                            + "to Client. Please wait...");
+                                    
+                                    String[] netArr = getRunningProcesses();
+                                    
+                                    System.out.println("Test Processes Array:");
                                     
                                     int index = 0;
                                     
@@ -972,6 +1067,48 @@ private class Server extends JPanel
                 return serverCreated;
 
             }//end startServer() method
-        }//end Server class
+        }//end StartServerListener subclass
+    }//end Server class
+    
+    class UpdateText extends SwingWorker<String, String> 
+    {
+        @Override
+        public String doInBackground() 
+        {
+//            for (int i = 0; i < 1000; i++) {
+//                publish("Hello-" + i);
+//                try {
+//                    Thread.sleep(500);
+//                } catch (InterruptedException e) {
+//                    // TODO Auto-generated catch block
+//                    e.printStackTrace();
+//                }
+//            }
+            return null;
+        }
+
+        @Override
+        public void process(java.util.List<String> chunks) {
+//            for (String s : chunks) {
+//                if (display.getDocument().getLength() > 0) {
+//                    display.append("\n");
+//                }
+//                display.append(s);
+//            }
+            try {
+                display.setCaretPosition(display.getLineStartOffset(display.getLineCount() - 1));
+            } 
+            catch (BadLocationException e) 
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void done() {
+
+        }
     }
+    
 }//end SConstructor

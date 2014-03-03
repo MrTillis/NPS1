@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Timer;
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -28,9 +29,11 @@ import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
@@ -43,6 +46,8 @@ import net.miginfocom.swing.MigLayout;
  * 
  * @author Taylor (GUI layout)
  * @author Jeremiah Doody (Main coding, GUI layout)
+ * @author Reed
+ * @author Zack
  */
 public class SController 
 {
@@ -66,6 +71,8 @@ public class SController
     String empty = "";
     boolean firstActivate = false;
     
+    private Date upTimeStart;
+    int secondsRunning = 0;
     
     /**
      * Constructor for SController class.
@@ -294,11 +301,35 @@ public class SController
     
     /**
      * 
-     * 
+     * @return the current server uptime
      */
-    public void getUptime()
+    public String getUpTime()
     {
-        
+            
+            //initialize varaibles
+            String result = null;
+            int currentUpTimeH =0;
+            int currentUpTimeM =0;
+            int currentUpTimeS =0;
+
+            //calculate
+            currentUpTimeH = (secondsRunning/3600);
+            int rem = (secondsRunning%3600);
+            currentUpTimeM = rem/60;
+            currentUpTimeS = rem%60;
+            String hourStr = (currentUpTimeH<10 ? "0" : "") + currentUpTimeH;
+            String minStr = (currentUpTimeM<10 ? "0" : "") + currentUpTimeM;
+            String secStr = (currentUpTimeS<10 ? "0" : "") + currentUpTimeS;
+            
+            
+            
+            
+            result = hourStr + " hours, " 
+                    + minStr + " minutes, " 
+                    + " and " + secStr + " seconds";
+            
+                
+            return result;
         
     }//end getUptime() method
     
@@ -307,10 +338,15 @@ public class SController
     /**
      * 
      */
-    public void getMemory()
+    public String[] getMemory()
     {
-    
-    
+        
+        System.out.println("getMemory() method accessed.");
+        
+        String[] messageArr = execute("free");//free
+        
+        return messageArr;
+        
     }//end getMemory() method
     
 //////////////////////////////////////////////////////////////////////////////
@@ -325,6 +361,24 @@ public class SController
         
         //create String array of executed code "netstat"
         String[] messageArr = execute("netstat");
+        
+        //return the array. Note the info will have been printed on screen.
+        return messageArr;
+        
+    }//end getNetstat()
+    
+//////////////////////////////////////////////////////////////////////////////
+    
+    /**
+     * Returns the users on server.
+     */
+    public String[] getUsers()
+    {
+        
+        System.out.println("getUsers() method accessed.");
+        
+        //create String array of executed code "netstat"
+        String[] messageArr = execute("who");//who
         
         //return the array. Note the info will have been printed on screen.
         return messageArr;
@@ -535,10 +589,52 @@ public class SController
                     getRunningProcesses();
                     
                 }//end else if
+                else if(cmd.equalsIgnoreCase("--upTime")
+                        || cmd.equalsIgnoreCase("-u"))
+                {
+                    
+                    String upTime = getUpTime();
+                    append("server","The current up time for your server is " + upTime + " since you started it.");
+                    
+                }//end else if
+                else if(cmd.equalsIgnoreCase("--who")
+                        || cmd.equalsIgnoreCase("-w"))
+                {
+                    
+                    append("server", "List of current users on Server:");
+                    getUsers();
+                    
+                }//end else if
                 else if (cmd.equalsIgnoreCase("--activate")) 
                 {
+                    //get current start time
+//                    upTimeStart = Calendar.getInstance().getTime();
+                    Runnable timer = new Runnable() 
+                    {
 
-                    if (serverInitialized == 1) {
+                        public void run() 
+                        {
+
+                            while (true) 
+                            {
+                                try 
+                                {
+                                    Thread.sleep(1000);
+                                }//end try
+                                catch (InterruptedException ex) 
+                                {
+                                    Logger.getLogger(SController.class.getName()).log(Level.SEVERE, null, ex);
+                                }//end catch
+                                    secondsRunning++;
+
+                            }//end while loop
+
+                        }//end run() method
+                    };
+                    new Thread(timer).start();
+                    
+                    if (serverInitialized == 1) 
+                    {
 
 
                         //open the server to the public
@@ -634,7 +730,7 @@ public class SController
                 /**
                  * The run method
                  */
-                public void run() 
+                public synchronized void run() 
                 {
                     
                     //If a time stamp should go anywhere for the server, it would be here.
@@ -700,7 +796,13 @@ public class SController
 //                        new Thread(adminMessage).start();
                         
                         
-                        
+                        if (!((cmd.toString()).startsWith("-"))) 
+                        {
+                            
+                            messageOut("admin", cmd.toString());
+                            System.out.println("Admin message \"cmd\": " + cmd.toString());
+                            
+                        }//end if
                         
                         
                         do 
@@ -718,6 +820,7 @@ public class SController
                                 append("client", clientcmd);
                                 if (clientcmd.equalsIgnoreCase("--connection close")) 
                                 {
+                                    
                                     messageOut("server", "Goodbye.");
 
 
@@ -787,7 +890,15 @@ public class SController
                                     }//end while
                                 
                                 }//end else if
+                                else if (clientcmd.equalsIgnoreCase("--upTime") 
+                                        || clientcmd.equalsIgnoreCase("-u")) 
+                                {
+                                    
+                                    String upTime = getUpTime();
+                                    
+                                    messageOut("server","The current up time for your server is " + upTime + " since you started it.");
 
+                                }//end if
                             }//end try
                             
                             catch (SocketException ex) 
@@ -1070,45 +1181,45 @@ public class SController
         }//end StartServerListener subclass
     }//end Server class
     
-    class UpdateText extends SwingWorker<String, String> 
-    {
-        @Override
-        public String doInBackground() 
-        {
-//            for (int i = 0; i < 1000; i++) {
-//                publish("Hello-" + i);
-//                try {
-//                    Thread.sleep(500);
-//                } catch (InterruptedException e) {
-//                    // TODO Auto-generated catch block
-//                    e.printStackTrace();
-//                }
+//    class UpdateText extends SwingWorker<String, String> 
+//    {
+//        @Override
+//        public String doInBackground() 
+//        {
+////            for (int i = 0; i < 1000; i++) {
+////                publish("Hello-" + i);
+////                try {
+////                    Thread.sleep(500);
+////                } catch (InterruptedException e) {
+////                    // TODO Auto-generated catch block
+////                    e.printStackTrace();
+////                }
+////            }
+//            return null;
+//        }
+//
+//        @Override
+//        public void process(java.util.List<String> chunks) {
+////            for (String s : chunks) {
+////                if (display.getDocument().getLength() > 0) {
+////                    display.append("\n");
+////                }
+////                display.append(s);
+////            }
+//            try {
+//                display.setCaretPosition(display.getLineStartOffset(display.getLineCount() - 1));
+//            } 
+//            catch (BadLocationException e) 
+//            {
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
 //            }
-            return null;
-        }
-
-        @Override
-        public void process(java.util.List<String> chunks) {
-//            for (String s : chunks) {
-//                if (display.getDocument().getLength() > 0) {
-//                    display.append("\n");
-//                }
-//                display.append(s);
-//            }
-            try {
-                display.setCaretPosition(display.getLineStartOffset(display.getLineCount() - 1));
-            } 
-            catch (BadLocationException e) 
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void done() {
-
-        }
-    }
+//        }
+//
+//        @Override
+//        public void done() {
+//
+//        }
+//    }
     
 }//end SConstructor
